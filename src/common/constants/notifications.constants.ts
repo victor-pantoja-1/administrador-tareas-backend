@@ -1,0 +1,30 @@
+export const TRANSLATE_NOTIFICATION = {
+  es: {
+    TASK_STATUS_UPDATED_TITLE: 'Tarea actualizada',
+    TASK_STATUS_UPDATED_BODY: 'La tarea %name% cambió su estado a %status%',
+    TASK_ASSIGNATION_TITLE: 'Nueva tarea asignada',
+    TASK_ASSIGNATION_BODY: 'Te asignaron la tarea: %name%',
+    TASK_APPROVED_TITLE: '¡Tarea aprobada!',
+    TASK_APPROVED_BODY: 'Aprobaron tu solicitud: %name%',
+    TASK_MESSAGE_TITLE: 'Nuevo mensaje',
+    TASK_MESSAGE_BODY: '%sender%: %message%',
+    TASK_RATING_TITLE: 'Nueva puntuación',
+    TASK_RATING_BODY: '%score% estrellas para la tarea: %name%',
+    NEW_REQUEST_TASK_TITLE: 'Nueva solicitud de tarea',
+    NEW_REQUEST_TASK_BODY: '%name%',
+  },
+  en: {
+    TASK_STATUS_UPDATED_TITLE: 'Updated task',
+    TASK_STATUS_UPDATED_BODY: 'Task %name% changed its status to %status%',
+    TASK_ASSIGNATION_TITLE: 'New task assigned',
+    TASK_ASSIGNATION_BODY: 'You were assigned the task: %name%',
+    TASK_APPROVED_TITLE: 'Task approved!',
+    TASK_APPROVED_BODY: 'Your request task was approved: %name%',
+    TASK_MESSAGE_TITLE: 'New message',
+    TASK_MESSAGE_BODY: '%sender%: %message%',
+    TASK_RATING_TITLE: 'New score',
+    TASK_RATING_BODY: '%score% stars for task: %name%',
+    NEW_REQUEST_TASK_TITLE: 'New task request',
+    NEW_REQUEST_TASK_BODY: '%name%',
+  }
+};

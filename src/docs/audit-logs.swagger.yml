@@ -1,0 +1,313 @@
+openapi: 3.0.0
+info:
+  title: Audit Log API
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+paths:
+  /audit-log/paginate:
+    get:
+      summary: Get all paginated audit logs
+      tags:
+        - AuditLog
+      parameters:
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+          description: Page number for pagination
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Number of items per page
+        - in: query
+          name: entities
+          required: false
+          description: Entity names to filter
+          schema:
+            type: array
+            items:
+              type: string
+              enum: 
+                - ChatEntity
+                - ConversationEntity
+                - FeedbackEntity
+                - MessageReadStatusEntity
+                - MessageEntity
+                - PermissionEntity
+                - RatingEntity
+                - RequestTaskEntity
+                - RoleEntity
+                - TagEntity
+                - TaskEntity
+                - UserEntity
+          explode: true
+          style: form
+        - in: query
+          name: startDate
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date of logs (format date ISO8601)
+        - in: query
+          name: endDate
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date of logs (format date ISO8601)
+        - in: query
+          name: action
+          required: false
+          schema:
+            type: string
+            enum: [
+              READ,
+              CREATE,
+              UPDATE,
+              DELETE,
+              STATUS_CHANGE,
+            ]
+          description: Action logs
+        - in: query
+          name: users
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+              example: '0015e410-bb91-49fc-8aa1-8050a6b29238'
+          description: User list UUIDs
+      responses:
+        '200':
+          description: A paginated list of audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogSingle'
+                  total:
+                    type: integer
+                    example: 50
+                  page:
+                    type: integer
+                    example: 1
+                  lastPage:
+                    type: integer
+                    example: 5
+                  limit:
+                    type: integer
+                    example: 10
+                  hasPrevPage:
+                    type: boolean
+                    example: false
+                  hasNextPage:
+                    type: boolean
+                    example: false
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: AUDIT_LOGS_RETRIEVED_SUCCESSFULLY
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Error to paginate response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 404
+                  message:
+                    type: string
+                    example: AUDIT_LOGS_NOT_FOUND
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /audit-log/{id}:
+    get:
+      summary: Get audit log by ID
+      tags:
+        - AuditLog
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the audit log
+      responses:
+        '200':
+          description: An audit log
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: AUDIT_LOGS_RETRIEVED_SUCCESSFULLY
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Error to paginate response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 404
+                  message:
+                    type: string
+                    example: AUDIT_LOGS_NOT_FOUND
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+security:
+  - BearerAuth: []
+  
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AuditLogSingle:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '0059c432-9c0f-4a85-890b-bf180fdbd9ab'
+        entity:
+          type: string
+          example: 'RequestTaskEntity'
+        documentId:
+          type: string
+          nullable: true
+          example: 00abc4fc-7dbf-4cbb-891f-38bc58e93c49
+        action:
+          type: string
+          example: 'READ'
+        ipAddress:
+          type: string
+          example: '127.0.0.1'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-08-30T13:45:14.239Z'
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: '290c3bd1-8351-477c-8ec8-b6ea2f5d23c4'
+            name:
+              type: string
+              example: 'Admin'
+            lastName:
+              type: string
+              example: 'TM'
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "025bfdc6-0080-4fbe-916b-58b66df3b6ab"
+        entity:
+          type: string
+          example: "UserEntity"
+        documentId:
+          type: string
+          example: "6773cc8a-ba3f-4b8a-a34d-1c91a9418287"
+        action:
+          type: string
+          example: "CREATE"
+        ipAddress:
+          type: string
+          example: "::ffff:127.0.0.1"
+        beforeChanges:
+          type: string
+          nullable: true
+          example: null
+        snapshot:
+          type: string
+          nullable: true
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-08-28T12:17:37.602Z"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "290c3bd1-8351-477c-8ec8-b6ea2f5d23c4"
+            name:
+              type: string
+              example: "Admin"
+            lastName:
+              type: string
+              example: "TM"
+            email:
+              type: string
+              example: "admin@taskmanager.com"
+
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500

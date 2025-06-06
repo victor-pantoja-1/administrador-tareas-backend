@@ -1,0 +1,316 @@
+openapi: 3.0.0
+info:
+  title: Permission API
+  description: API for managing permissions
+  version: 1.0.0
+tags:
+  - name: permission
+    description: Operations related to permissions
+
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /permissions:
+    post:
+      tags:
+        - permission
+      summary: Create a new permission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermissionDto'
+      responses:
+        '200':
+          description: Permission found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: PERMISSION_CREATED_SUCCESSFULLY
+                  data:
+                    $ref: '#/components/schemas/SinglePermission'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '409':
+          description: Permission already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionAlreadyExists'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        
+    get:
+      tags:
+        - permission
+      summary: Get all permissions
+      responses:
+        '200':
+          description: A list of permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPermission'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: No permissions found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /permissions/{id}:
+    get:
+      tags:
+        - permission
+      summary: Get a permission by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SinglePermission'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - permission
+      summary: Delete a permission by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: SUCCESS
+                  data:
+                    type: boolean
+                    example: true
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Permission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreatePermissionDto:
+      type: object
+      properties:
+        target:
+          type: string
+          example: "users.permitAll"
+        resource:
+          type: string
+          example: "users"
+      required:
+        - target
+        - resource
+
+    SinglePermission:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "7040f2f7-7413-477e-9bfd-13b5e1a368e7"
+        target:
+          type: string
+          example: "users.permitAll"
+        resource:
+          type: string
+          example: "users"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-09-04T19:35:26.674Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-09-04T19:35:26.674Z"
+
+    ListPermission:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string 
+          example: SUCCESS
+        data:
+          $ref: '#/components/schemas/PermissionsByResource'
+          
+    PermissionsByResource:
+      type: object
+      properties:
+        feedbacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackPermission'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserPermission'
+        ratings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingPermission'
+            
+    FeedbackPermission:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 011c0926-955d-4a0c-9be5-dd4c3111746d
+        resource:
+          type: string
+          example: feedbacks  
+        target:
+          type: string
+          example: feedbacks.delete
+          
+    UserPermission:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 0210ab6f-dd1b-4d6f-8f06-c5395676f099
+        resource:
+          type: string
+          example: users
+        target:
+          type: string
+          example: users.create
+          
+    RatingPermission:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 03847862-56e2-4fab-abef-b68a244d3d32
+        resource:
+          type: string
+          example: ratings
+        target:
+          type: string
+          example: ratings.tehnician
+
+    PermissionAlreadyExists:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 409
+        message:
+          type: string
+          example: PERMISSION_ALREADY_EXISTS
+
+    PermissionNotFound:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 404
+        message:
+          type: string
+          example: PERMISSION_NOT_FOUND
+
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500

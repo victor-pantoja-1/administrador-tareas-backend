@@ -1,0 +1,629 @@
+openapi: 3.0.0
+info:
+  title: Request Task API
+  description: API for magnagement of requests tasks
+  version: 1.0.0
+  
+tags:
+  - name: RequestTask
+    description: Operations related to requests tasks
+
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /request-task:
+    post:
+      tags:
+        - RequestTask
+      summary: Create a new request task
+      description: Create a new request task associated with a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequestTaskDto'
+      responses:
+        '200':
+          description: Request task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: REQUEST_TASK_CREATED_SUCCESSFULLY
+                  data:
+                    $ref: '#/components/schemas/RequestTask'
+        
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - RequestTask
+      summary: Get all the requests tasks
+      description: Get a list of all the requests tasks.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search query to filter request task by name or description
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of page for pagination
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Limit of elements per page
+      responses:
+        '200':
+          description: A list of requests tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRequestTaskResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      
+
+  /request-task/last-five:
+    get:
+      tags:
+        - RequestTask
+      summary: Get the last five request tasks
+      description: Get the last five request tasks.
+      responses:
+        '200':
+          description: List of the last five request tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: REQUEST_TASK_RETRIEVED_SUCCESSFULLY
+                  data:
+                    $ref: '#/components/schemas/RequestTask'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      
+  /request-task/{id}:
+    get:
+      tags:
+        - RequestTask
+      summary: Get a request task by ID
+      description: Get a request task by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the request task
+      responses:
+        '200':
+          description: Request Task found successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: SUCCESS
+                  data:
+                    $ref: '#/components/schemas/RequestTask'
+        '404':
+          description: Request Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestTaskNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      
+
+    patch:
+      tags:
+        - RequestTask
+      summary: Update a request task
+      description: Update a request task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the request task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequestTaskDto'
+      responses:
+        '204':
+          description: Request Task Updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 204
+                  message:
+                    type: string
+                    example: REQUEST_TASK_UPDATED_SUCCESSULLY
+                  data:
+                    type: boolean
+                    example: true
+        '404':
+          description: Request Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestTaskNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      
+    delete:
+      tags:
+        - RequestTask
+      summary: Remove a request task
+      description: Remove a request task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the request task
+      responses:
+        '204':
+          description: Request Task Deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 204
+                  message:
+                    type: string
+                    example: REQUEST_TASK_DELETED_SUCCESSFULLY
+                  data:
+                    type: boolean
+                    example: true
+        '404':
+          description: Request Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestTaskNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      
+
+  /request-task/update-status/{id}:
+    patch:
+      tags:
+        - RequestTask
+      summary: Update the status of a request task
+      description: Update the status of a request task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the request task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskStatusDto'
+      responses:
+        '200':
+          description: Request task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: REQUEST_TASK_UPDATED_SUCCESSULLY
+                  data:
+                    $ref: '#/components/schemas/RequestTask'
+        '404':
+          description: Request Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestTaskNotFound'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RequestTaskRejected'
+                  - $ref: '#/components/schemas/RequestTaskCanBeUpdated'
+              examples:
+                RequestTaskRejected:
+                  summary: Request Task Rejected
+                  value:
+                    message: "REQUEST_TASK_REJECTED"
+                    code: 409
+                RequestTaskCanBeUpdated:
+                  summary: Request Task Can Be Updated
+                  value:
+                    message: REQUEST_TASK_CANT_BE_UPDATED
+                    code: 409
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateRequestTaskDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title of the task
+          example: This is a title of the task
+        description:
+          type: string
+          description: Description of the task
+          example: This is a description of the task
+        images:
+          type: array
+          items:
+            type: string
+          description: Images of the task
+          example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg']
+        reasonOfCancelation:
+          type: string
+          description: Reason of the cancelation of the task
+          example: Canceled because of some reason
+        address:
+          type: string
+          description: Address of the task
+          example: Some address
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+          description: Ubication of the task 
+          example: { "latitude": 0, "longitude": 0 }
+
+    UpdateRequestTaskDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CreateRequestTaskDto'
+
+    UpdateTaskStatusDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - APPROVED
+            - REJECTED
+          example: REJECTED
+        reason:
+          type: string
+          description: Reason for the status change
+          example: Canceled because of some reason
+
+    RequestTask:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        title:
+          type: string
+          example: This is a title of the task
+        description:
+          type: string
+          example: This is a description of the task
+        status:
+          type: string
+          enum:
+            - APPROVED
+            - REJECTED
+            - REQUESTED
+          example: REQUESTED
+        images:
+          type: array
+          items:
+            type: string
+          example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg']
+        address:
+          type: string
+          example: Some address
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+          example: { "latitude": 20.0210651, "longitude": -75.8291294 }
+        client:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: '550e8400-e29b-41d4-a716-446655440000'
+            email:
+              type: string
+              format: email
+              example: 'juan@gmail.com'
+            name:
+              type: string
+              example: Juan
+            lastName:
+              type: string
+              example: Gonzalez
+            password:
+              type: string
+              example: $2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT2zgMwbe7W6.nOE5Nk7oOu1Au2
+            photo:
+              type: string
+              example: 'https://example.com/image1.jpg'
+            docNumber:
+              type: string
+              example: '123456789'
+            prefix:
+              type: string
+              example: '+53'
+            phoneNumber:
+              type: string
+              example: '58251234'
+            isNew:
+              type: boolean
+              example: true
+            gender:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: MALE
+            enable2FA:
+              type: boolean
+              example: false
+            role:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: '5ac6df5e-2ada-4a2d-8405-46ea866e3c6c'
+                name:
+                  type: string
+                  example: client
+                description:
+                  type: string
+                  example: Client role
+                isActive:
+                  type: boolean
+                  example: true 
+                createdAt:
+                  type: string
+                  format: date-time
+                  example: '2024-08-07T19:43:34.000Z'
+                updatedAt:
+                  type: string
+                  format: date-time
+                  example: '2024-08-07T19:43:34.000Z'
+                permissions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: '049a42e0-12d7-4be6-959b-69fea328e417'
+                      resource:
+                        type: string
+                        example: messages
+                      target:
+                        type: string
+                        example: messages.getById
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: '2024-08-07T21:05:52.000Z'
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: '2024-08-07T21:05:52.000Z'
+        task: 
+          type: object
+          example: null
+        reasonOfCancelation:
+          type: string
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-08-07T19:43:34.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-08-22T05:50:29.000Z' 
+
+    PaginatedRequestTaskResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestTask'
+        total:
+          type: integer
+          example: 12
+        page:
+          type: integer
+          example: 1
+        lastPage:
+          type: integer
+          example: 2
+        limit:
+          type: integer
+          example: 10
+        hasPrevPage:
+          type: boolean
+          example: false
+        hasNextPage:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: SUCCESS
+
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500
+    
+    RequestTaskNotFound:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 404
+        message:
+          type: string
+          example: REQUEST_TASK_NOT_FOUND
+
+    RequestTaskRejected:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 409
+        message:
+          type: string
+          example: "REQUEST_TASK_REJECTED"
+
+    RequestTaskCanBeUpdated:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 409
+        message:
+          type: string
+          example: REQUEST_TASK_CANT_BE_UPDATED

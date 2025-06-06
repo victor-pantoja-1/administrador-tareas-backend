@@ -1,0 +1,186 @@
+asyncapi: 3.0.0
+info:
+  title: Chat Gateway API
+  version: 1.0.0
+  description: API for managing chat connections and messages in a chat application.
+servers:
+  development:
+    host: 'localhost:9000'
+    pathname: /api/v1/chat?conversationId={conversationId}
+    protocol: ws
+    variables:
+      conversationId:
+        description: The conversation Id to access to the messages
+channels:
+  /:
+    address: /
+    messages:
+      chatIn:
+        $ref: '#/components/messages/chatIn'
+      UserLeftChat:
+        $ref: '#/components/messages/UserLeftChat'
+      CreateMessage:
+        $ref: '#/components/messages/CreateMessage'
+      NewMessage:
+        $ref: '#/components/messages/NewMessage'
+      UnreadMessagesCount:
+        $ref: '#/components/messages/UnreadMessagesCount'
+      OnlineUsers:
+        $ref: '#/components/messages/OnlineUsers'
+    description: Main channel for chat events
+
+operations:
+  subscribeToChatEvents:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    summary: Subscribe to chat events
+    messages:
+      - $ref: '#/channels/~1/messages/chatIn'
+      - $ref: '#/channels/~1/messages/UserLeftChat'
+      - $ref: '#/channels/~1/messages/UnreadMessagesCount'
+      - $ref: '#/channels/~1/messages/OnlineUsers'
+      - $ref: '#/channels/~1/messages/CreateMessage'
+      - $ref: '#/channels/~1/messages/NewMessage'
+components:
+  schemas:
+    commonHeaders:
+      type: object
+      properties: 
+        authorization:
+          type: string
+          examples:
+              - Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE4ODk3OTQwLTJhNDItNDM3OS05OGJlLTExMWM1YTY5OTQyYSIsImVtYWlsIjoiYWRtaW5AdGFza21hbmFnZXIuY29tIiwiZnVsbE5hbWUiOiJBZG1pbiBUTSIsInJvbGUiOiI1MDgzZjgwNy0xYzVkLTQyNWUtYjJiMC1mMGNhZTk4ODA2ZWYiLCJpYXQiOjE3MjUzMDI4NjgsImV4cCI6MTcyNTM0NjA2OH0.GhbzOKnLlWpKLUPQXdGJ-PcfKjR89UWV0txIWyHNXwg
+  messages:
+    chatIn:
+      name: chatIn
+      title: chatIn
+      summary: Event triggered when a user enters a chat
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/commonHeaders'
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the conversation the user entered
+            example: 0dbd1d13-e840-42f9-801e-3c72a13a9fbf
+    OnlineUsers:
+      name: onlineUsers
+      title: onlineUsers
+      summary: Event that is emitted once you enter the chat. Returns active users
+      contentType: application/json
+      payload:
+        type: array
+        items: 
+          - type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "Unique identifier of the user"
+                example: "18897940-2a42-4379-98be-111c5a69942a"
+              name:
+                type: string
+                description: "User's first name"
+                example: Admin
+              lastName:
+                type: string
+                description: "User's last name"
+                example: TM
+              email:
+                type: string
+                format: email
+                description: "User's email address"
+                example: admin@taskmanager.com
+              role:
+                type: string
+                description: "User's role in the system"
+                example: superAdmin
+              photo:
+                type: string
+                nullable: true
+                description: "URL of the user's photo"
+                example: null
+
+    UserLeftChat:
+      name: chatOut
+      title: chatOut
+      summary: Event to fire when a user leaves a chat
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/commonHeaders'
+      payload:
+        type: string
+
+    CreateMessage:
+      name: createMessage
+      title: createMessage
+      summary: Event in which a new message is sent to the conversation in which the user is located
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/commonHeaders'
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the conversation
+            example: 0dbd1d13-e840-42f9-801e-3c72a13a9fbf
+          message:
+            type: string
+            description: The message content
+            example: Hello there
+
+    NewMessage:
+      name: newMessage
+      title: newMessage
+      summary: Event triggered when a new message is received
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          message:
+            type: string
+            example: "Hello there"
+          conversation:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "0dbd1d13-e840-42f9-801e-3c72a13a9fbf"
+          user:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "18897940-2a42-4379-98be-111c5a69942a"
+          id:
+            type: string
+            format: uuid
+            example: "a6bf07b4-545e-42b3-b219-3a0d7d3d580c"
+          createdAt:
+            type: string
+            format: date-time
+            example: "2024-09-03T05:46:34.015Z"
+          updatedAt:
+            type: string
+            format: date-time
+            example: "2024-09-03T05:46:34.015Z"
+          isDeleted:
+            type: boolean
+            example: false
+
+    UnreadMessagesCount:
+      name: unreadMessagesCount
+      title: unreadMessagesCount
+      summary: Event fired to send the count of unread messages. Emitted once the user posts the "chatIn" event.
+      contentType: application/json
+      payload:
+        type: number
+        examples:
+          - 8
+          - 10

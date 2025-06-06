@@ -1,0 +1,421 @@
+openapi: 3.0.0
+info:
+  title: Messages API
+  description: API for managing messages
+  version: 1.0.0
+tags:
+  - name: messages
+    description: Operations related to messages
+
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /messages:
+    post:
+      tags:
+        - messages
+      summary: Create a new message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageDto'
+      responses:
+        '201':
+          description: Message created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+
+  /messages/conversation/{conversationId}:
+    get:
+      tags:
+        - messages
+      summary: Get paginated messages by conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMessagesResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationNotFound'
+        '403':
+          description: User not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserNotAuthorized'
+        '500':
+          description: Internal server error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /messages/status/{id}:
+    patch:
+      tags:
+        - messages
+      summary: Update message status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMessageStatusDto'
+      responses:
+        '200':
+          description: Message status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatedMessageResponse'
+        '403':
+          description: User not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserNotAuthorized'
+        '404':  
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreateMessageDto:
+      type: object
+      properties:
+        conversationId:
+          type: string
+          example: 947b61d0-672f-48b2-ab08-bd763ae34fd6
+        message:
+          type: string
+          example: Hello, how are you?
+      required:
+        - conversationId
+        - message
+
+    UpdateMessageStatusDto:
+      type: object
+      properties:
+        conversationId:
+          type: string
+          example: 947b61d0-672f-48b2-ab08-bd763ae34fd6
+        message:
+          type: string
+          example: Hello, how are you?
+        idDeleted:
+          type: boolean
+          example: true
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          $ref: '#/components/schemas/Message'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    
+    UpdatedMessageResponse:
+      type: object
+      properties:
+        data:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: MESSAGE_UPDATED_SUCCESSFULLY
+
+    ConversationNotFound:
+      type: object
+      properties:
+        message:
+          type: string
+          example: CONVERSATION_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 404
+
+    MessageNotFound:
+      type: object
+      properties:
+        message:
+          type: string
+          example: MESSAGE_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 404
+
+    UserNotAuthorized:
+      type: object
+      properties:
+        message:
+          type: string
+          example: USER_NOT_AUTHORIZED
+        statusCode:
+          type: integer
+          example: 403
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500
+            
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Hello, how are you?"
+        conversation:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "0dbd1d13-e840-42f9-801e-3c72a13a9fbf"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "18897940-2a42-4379-98be-111c5a69942a"
+        id:
+          type: string
+          example: "31428638-068d-4faa-9829-bcc3e5eb6228"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-09-04T04:14:03.006Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-09-04T04:14:03.006Z"
+        isDeleted:
+          type: boolean
+          example: false
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "18897940-2a42-4379-98be-111c5a69942a"
+        name:
+          type: string
+          example: "Admin"
+        lastName:
+          type: string
+          example: "TM"
+        isPrivate:
+          type: boolean
+          example: true
+        email:
+          type: string
+          format: email
+          example: "admin@taskmanager.com"
+        docNumber:
+          type: string
+          example: null
+        prefix:
+          type: string
+          example: "+59"
+        phoneNumber:
+          type: string
+          example: "123156156"
+        photo:
+          type: string
+          example: null
+        active:
+          type: boolean
+          example: true
+        gender:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 3
+            name:
+              type: string
+              example: "OTHER"
+        lang:
+          type: string
+          example: null
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "5083f807-1c5d-425e-b2b0-f0cae98806ef"
+            name:
+              type: string
+              example: "superAdmin"
+            description:
+              type: string
+              example: "Super Administrator role"
+            isActive:
+              type: boolean
+              example: true
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-08-29T03:51:47.000Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-08-29T03:53:31.000Z"
+
+    SingleMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "ab30ff4a-217e-4c57-9bef-87c7be077e71"
+        message:
+          type: string
+          example: "Hello"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-08-30T06:41:10.242Z"
+        isDeleted:
+          type: boolean
+          example: false
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "18897940-2a42-4379-98be-111c5a69942a"
+            name:
+              type: string
+              example: "Admin"
+            lastName:
+              type: string
+              example: "TM"
+            email:
+              type: string
+              format: email
+              example: "admin@taskmanager.com"
+            photo:
+              type: string
+              example: null
+            role:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "superAdmin"
+
+    PaginatedMessagesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SingleMessage'
+        total:
+          type: integer
+          example: 12
+        page:
+          type: integer
+          example: 1
+        lastPage:
+          type: integer
+          example: 2
+        limit:
+          type: integer
+          example: 10
+        hasPrevPage:
+          type: boolean
+          example: false
+        hasNextPage:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: MESSAGE_RETRIEVED_SUCCESSFULLY
+    
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

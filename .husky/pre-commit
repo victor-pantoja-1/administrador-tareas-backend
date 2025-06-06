@@ -1,0 +1,9 @@
+. "$(dirname -- "$0")/_/husky.sh"
+
+branch_name=$(git symbolic-ref --short HEAD)
+if [[ ! $branch_name =~ ^(feature|hotfix|bugfix)\/.*$ ]]; then
+  echo "ERROR: Invalid branch name! Please use one of the following formats: 'feature/branch-name', 'hotfix/branch-name', or 'bugfix/branch-name'."
+  exit 1
+fi
+
+npx lint-staged

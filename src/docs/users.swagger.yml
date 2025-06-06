@@ -1,0 +1,1071 @@
+openapi: 3.0.0
+info:
+  title: User API
+  description: API for managing users, including creation, update, deletion, authentication, and profile management.
+  version: 1.0.0
+
+tags:
+  - name: users
+    description: Operations related to user management
+
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /users/seeds:
+    post:
+      tags:
+        - Users
+      summary: Seeds the user data
+      description: Seeds data into the user database for testing purposes.
+      operationId: seedUsers
+      responses:
+        '200':
+          description: Data seeded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeededData"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      description: Create a new user with the provided details.
+      operationId: createUser
+      requestBody:
+        description: User creation payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserDto"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RoleNotFound"
+                  - $ref: "#/components/schemas/InvalidRoleOrGender"
+              examples:
+                RoleNotFound:
+                  summary: Role Not Found
+                  value:
+                    message: ROLE_NOT_FOUND
+                    code: 400
+                InvalidRoleOrGender:
+                  summary: Invalid Role or Gender
+                  value:
+                    message: INVALID_ROLE_OR_GENDER
+                    code: 400
+
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAlreadyExists"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Retrieve a list of users with pagination.
+      operationId: findAllUsers
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Limit of users per page
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsersResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get a user by ID
+      description: Retrieve a specific user by their ID.
+      operationId: findUserById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserNotFound"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      tags:
+        - Users
+      summary: Update a user by ID
+      description: Update user details.
+      operationId: updateUserById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        description: User update payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: USER_UPDATED_SUCCESSFULLY
+                  data:
+                    type: boolean
+                    example: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserNotFound"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/lang:
+    patch:
+      tags:
+        - Users
+      summary: Updates the language preference of a user
+      operationId: updateLang
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLangUserDto"
+      responses:
+        '200':
+          description: User language updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: boolean
+                    example: true
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserNotFound"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/technicians/availability:
+    get:
+      tags:
+        - Users
+      summary: Get technician availability within a specific date range
+      operationId: techniciansAvailability
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          description: Start date
+          schema:
+            type: string
+            format: date-time
+            example: "2023-05-20T14:26:53.000Z"
+        - name: endDate
+          in: query
+          required: true
+          description: End date
+          schema:
+            type: string
+            format: date-time
+            example: "2025-12-31T23:26:53.000Z"
+        - name: page
+          in: query
+          required: false
+          description: The page number
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          required: false
+          description: The number of records per page
+          schema:
+            type: integer
+            example: 10
+      responses:
+        '200':
+          description: A list of technicians with their availability status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TechnicianAvailability"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/roles/{roleName}:
+    get:
+      tags:
+        - Users
+      summary: Get users by role
+      description: Retrieve a list of users with a specific role.
+      operationId: findUsersByRole
+      parameters:
+        - in: path
+          name: roleName
+          required: true
+          schema:
+            type: string
+          description: Role name
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsersResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/profile/me:
+    get:
+      tags:
+        - Users
+      summary: Get current role and permissions
+      description: Retrieve the role and permissions of the currently authenticated user.
+      operationId: getMyProfile
+      responses:
+        "200":
+          description: Role and permissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: ROLES_AND_PERMISSIONS_RETRIEVED_SUCCESSFULLY
+                  data:
+                    $ref: "#/components/schemas/Role"
+
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/profile/info:
+    get:
+      tags:
+        - Users
+      summary: Get private profile information
+      description: Retrieve private profile information of a user.
+      operationId: profileInfo
+      parameters:        
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token
+          schema:
+            type: string
+          example: 'Bearer <token>'
+      responses:
+        '200':
+          description: Profile information retrieved successfully
+          content:
+            application/json:
+              schema:
+                  type: object
+                  properties:
+                    statusCode:
+                      type: number
+                      example: 200
+                    message:
+                      type: string
+                      example: USER_RETRIEVED_SUCCESSFULLY
+                    data:
+                        $ref: '#/components/schemas/UserPrivateResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/profile/info/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get public profile information
+      description: Retrieve public profile information of a user.
+      operationId: profileInfo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          example: e5943e91-a152-449e-808e-0900f7714ef4
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token
+          schema:
+            type: string
+          example: 'Bearer <token>'
+      responses:
+        '200':
+          description: Profile information retrieved successfully
+          content:
+            application/json:
+              schema:
+                  type: object
+                  properties:
+                    statusCode:
+                      type: number
+                      example: 200
+                    message:
+                      type: string
+                      example: USER_RETRIEVED_SUCCESSFULLY
+                    data:
+                        $ref: '#/components/schemas/UserPublicResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    CreateUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the user
+          example: Juan
+        lastName:
+          type: string
+          description: The last name of the user
+          example: Gonzalez
+        email:
+          type: string
+          description: The email of the user
+          example: juan@gmail.com
+        role:
+          type: string
+          description: The role ID of the user
+          example: "777db906-0846-4111-80f3-41798b55adf2"
+        prefix:
+          type: string
+          description: The prefix of the user
+          example: "+53"
+        phoneNumber:
+          type: string
+          description: The phone number of the user
+          example: "58251234"
+        gender:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: MALE
+
+    UpdateUserDto:
+      allOf:
+        - $ref: "#/components/schemas/CreateUserDto"
+      properties:
+        name:
+          type: string
+          description: The updated name of the user
+          example: JoselfUpdated
+
+    UpdateLangUserDto:
+      type: object
+      properties:
+        lang:
+          type: string
+          enum:
+            - es
+            - en
+          example: es
+
+    PaginatedUsersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserSimplifiedResponse"
+        total:
+          type: integer
+          example: 12
+        page:
+          type: integer
+          example: 1
+        lastPage:
+          type: integer
+          example: 2
+        limit:
+          type: integer
+          example: 10
+        hasPrevPage:
+          type: boolean
+          example: false
+        hasNextPage:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: SUCCESS
+
+    SeededData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: Admin
+        lastName:
+          type: string
+          example: TM
+        email:
+          type: string
+          format: email
+          example: "admin@taskmanager.com"
+        password:
+          type: string
+          example: "$2a$10$pOjd8LiPWV31KpjpeEXKU.t8aQpvU9.PfbhDn5tcytdX0033.RAUS"
+        prefix:
+          type: string
+          example: "+59"
+        phoneNumber:
+          type: string
+          example: "123456"
+        isNew:
+          type: boolean
+          example: false
+        gender:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 3
+            name:
+              type: string
+              example: OTHER
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "5ac6df5e-2ada-4a2d-8405-46ea866e3c6c"
+            name:
+              type: string
+              example: superAdmin
+            description:
+              type: string
+              example: Super Administrator role
+            isActive:
+              type: boolean
+              example: true
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-08-07T19:43:34.000Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-08-22T05:50:29.000Z"
+            permissions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "049a42e0-12d7-4be6-959b-69fea328e417"
+                  resource:
+                    type: string
+                    example: messages
+                  target:
+                    type: string
+                    example: messages.getById
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2024-08-07T21:05:52.000Z"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    example: "2024-08-07T21:05:52.000Z"
+        enable2FA:
+          type: boolean
+          example: false
+        resetPasswordToken:
+          type: string
+          example: null
+        notificationsTokens:
+          type: string
+          example: null
+        lang:
+          type: string
+          example: null
+        active:
+          type: boolean
+          example: true
+        photo:
+          type: string
+          example: "https://example.com/photo.jpg"
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+          example: { "latitude": 40.712776, "longitude": -74.005974 }
+        docNumber:
+          type: string
+          example: "A123456789"
+        address:
+          type: string
+          example: "123 Main St, Springfield, USA"
+
+    UserPublicResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: Juan
+        lastName:
+          type: string
+          example: Gonzalez
+        photo:
+          type: string
+          example: "http://example.com/photo.jpg"
+
+    UserPrivateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: Juan
+        lastName:
+          type: string
+          example: Gonzalez
+        photo:
+          type: string
+          example: "http://example.com/photo.jpg"
+        email:
+          type: string
+          format: email
+          example: "juan@gmail.com"
+        prefix:
+          type: string
+          example: "+53"
+        phoneNumber:
+          type: string
+          example: "58251234"
+        gender:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: MALE
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+          example: { "latitude": 40.712776, "longitude": -74.005974 }
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: Juan
+        lastName:
+          type: string
+          example: Gonzalez
+        email:
+          type: string
+          format: email
+          example: "juan@gmail.com"
+        password:
+          type: string
+          example: "$2a$10$pOjd8LiPWV31KpjpeEXKU.t8aQpvU9.PfbhDn5tcytdX0033.RAUS"
+        prefix:
+          type: string
+          example: "+53"
+        phoneNumber:
+          type: string
+          example: "58251234"
+        isNew:
+          type: boolean
+          example: true
+        gender:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: MALE
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "5ac6df5e-2ada-4a2d-8405-46ea866e3c6c"
+            name:
+              type: string
+              example: technician
+            description:
+              type: string
+              example: Technician role
+            isActive:
+              type: boolean
+              example: true
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-08-07T19:43:34.000Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-08-22T05:50:29.000Z"
+            permissions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "049a42e0-12d7-4be6-959b-69fea328e417"
+                  resource:
+                    type: string
+                    example: messages
+                  target:
+                    type: string
+                    example: messages.getById
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2024-08-07T21:05:52.000Z"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    example: "2024-08-07T21:05:52.000Z"
+        enable2FA:
+          type: boolean
+          example: false
+        emailVerifiedAt:
+          type: string
+          format: date-time
+          example: "2024-08-07T19:43:34.000Z"
+        resetPasswordToken:
+          type: string
+          example: null
+        notificationsTokens:
+          type: string
+          example: null
+        lang:
+          type: string
+          example: null
+        active:
+          type: boolean
+          example: true
+        photo:
+          type: string
+          example: null
+
+    UserSimplifiedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: Juan
+        lastName:
+          type: string
+          example: Gonzalez
+        email:
+          type: string
+          format: email
+          example: "juan@gmail.com"
+        role:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "5ac6df5e-2ada-4a2d-8405-46ea866e3c6c"
+            name:
+              type: string
+              example: technician
+            description:
+              type: string
+              example: Technician role
+            isActive:
+              type: boolean
+              example: true
+            permissions:
+              type: array
+              items:
+                type: object
+                properties:
+                  target:
+                    type: string
+                    example: messages.getById
+
+        active:
+          type: boolean
+          example: true
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: superAdmin
+        description:
+          type: string
+          example: Super Administrator role
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-08-07T19:43:34.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-08-07T19:43:34.000Z"
+        permissions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "049a42e0-12d7-4be6-959b-69fea328e417"
+              resource:
+                type: string
+                example: messages
+              target:
+                type: string
+                example: messages.getById
+              createdAt:
+                type: string
+                format: date-time
+                example: "2024-08-07T21:05:52.000Z"
+              updatedAt:
+                type: string
+                format: date-time
+                example: "2024-08-07T21:05:52.000Z"
+
+    TechnicianAvailability:
+      type: object
+      properties:
+        id:
+          type: string
+          example: e5943e91-a152-449e-808e-0900f7714ef4
+        name:
+          type: string
+          example: Juan
+        lastName:
+          type: string
+          example: Gonzalez
+        photo:
+          type: string
+          example: null
+        available:
+          type: boolean
+          example: true
+
+    UserAlreadyExists:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 409
+        message:
+          type: string
+          example: USER_ALREADY_EXISTS
+
+    RoleNotFound:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: ROLE_NOT_FOUND
+
+    InvalidRoleOrGender:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: INVALID_ROLE_OR_GENDER
+
+    BadRequest:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: ROLE_MUST_HAVE_PERMISSIONS
+
+    RoleInUse:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: ROLE_IN_USE
+
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+    UserNotFound:
+      type: object
+      properties:
+        statusCode:
+          type: number
+          example: 404
+        message:
+          type: string
+          example: USER_NOT_FOUND
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

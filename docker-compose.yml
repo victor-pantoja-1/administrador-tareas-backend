@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: user_tm
+      DB_PASSWORD: todopassword
+      DB_NAME: db_tm
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_tm
+      MYSQL_USER: user_tm
+      MYSQL_PASSWORD: todopassword
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge

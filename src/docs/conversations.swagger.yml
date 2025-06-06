@@ -1,0 +1,458 @@
+openapi: 3.0.0
+info:
+  title: Conversation API
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+paths:
+  /conversations:
+    post:
+      tags:
+        - Conversations
+      summary: Create a new conversation [Not implemented]
+      deprecated: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationDto'
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedConversation'
+        '500':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /conversations/paginate:
+    get:
+      tags:
+        - Conversations
+      summary: Get all conversations paginated
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of items per page
+      responses:
+        '200':
+          description: Paginated list of conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationListPaginated'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /conversations/{id}:
+    get:
+      tags:
+        - Conversations
+      summary: Get a conversation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the conversation
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetByIdConversation'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationNotFound'
+        '500':
+          description: General error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+        - Conversations
+      summary: Update a conversation [Not implemented]
+      deprecated: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConversationDto'
+      responses:
+        '200':
+          description: Conversation updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: null
+  /conversations/{id}/add-users:
+    patch:
+      tags:
+        - Conversations
+      summary: Add users to a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIds:
+                  type: array
+                  example:
+                    - '18897940-2a42-4379-98be-111c5a69942a'
+                    - '18897940-2a42-4379-98be-111c5a69942b'
+                  items:
+                    type: string
+              required:
+                - userIds
+      responses:
+        '200':
+          description: Users added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddUsersToConversation'
+        '400':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAlreadyExists'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationNotFound'
+        '500':
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /conversations/{id}/remove-users:
+    patch:
+      tags:
+        - Conversations
+      summary: Remove users from a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIds:
+                  type: array
+                  example:
+                    - '18897940-2a42-4379-98be-111c5a69942a'
+                    - '18897940-2a42-4379-98be-111c5a69942b'
+                  items:
+                    type: string
+              required:
+                - userIds
+      responses:
+        '200':
+          description: Users removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddUsersToConversation'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationNotFound'
+        '500':
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateConversationDto:
+      type: object
+      properties:
+        task:
+          type: string
+          example: Task id
+      required:
+        - title
+
+    UpdateConversationDto:
+      type: object
+      properties:
+        task:
+          type: string
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: b7cc4547-abf2-4e02-b429-bbdf80845239
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 7a7fcfdb-e5a0-42e2-9791-fca5e891691f
+              message:
+                type: string
+                example: Hello to whoever sees this message, I send you a warm greeting and hope it's a successful project delivery
+              createdAt:
+                type: string
+                format: date-time
+                example: '2024-08-30T10:16:09.440Z'
+              isDeleted:
+                type: boolean
+                example: false
+              user:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: 18897940-2a42-4379-98be-111c5a69942a
+                  name:
+                    type: string
+                    example: Admin
+                  lastName:
+                    type: string
+                    example: TM
+                  email:
+                    type: string
+                    format: email
+                    example: admin@taskmanager.com
+                  photo:
+                    type: string
+                    nullable: true
+                  role:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: 5083f807-1c5d-425e-b2b0-f0cae98806ef
+                      name:
+                        type: string
+                        example: superAdmin
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 18897940-2a42-4379-98be-111c5a69942a
+              name:
+                type: string
+                example: Admin
+              lastName:
+                type: string
+                example: TM
+              email:
+                type: string
+                format: email
+                example: admin@taskmanager.com
+              photo:
+                type: string
+                nullable: true
+              role:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: 5083f807-1c5d-425e-b2b0-f0cae98806ef
+                  name:
+                    type: string
+                    example: superAdmin
+        task:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 1247e9c2-83b8-4c18-81cf-0b58249337d0
+            title:
+              type: string
+              example: Repair satellite internet modem
+            description:
+              type: string
+              example: I am the description of the request task
+            status:
+              type: string
+              example: TODO
+            startDate:
+              type: string
+              format: date-time
+              example: '2024-08-30T04:13:01.000Z'
+            endDate:
+              type: string
+              format: date-time
+              example: '2024-08-31T06:00:00.000Z'
+            timeEstimation:
+              type: string
+              example: '3'
+
+    GetByIdConversation:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Conversation'
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: CONVERSATION_RETRIEVED_SUCCESSFULLY
+
+    AddUsersToConversation:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Conversation'
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: CONVERSATION_UPDATED_SUCCESSFULLY
+
+    ConversationNotFound:
+      type: object
+      properties:
+        message:
+          type: string
+          example: CONVERSATION_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 404
+
+    UserAlreadyExists:
+      type: object
+      properties:
+        message:
+          type: string
+          example: USER_ALREADY_EXISTS
+        statusCode:
+          type: integer
+          example: 400
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500
+
+    CreatedConversation:
+      type: object
+      properties:
+        data:
+          type: object
+        statusCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: CONVERSATION_CREATED_SUCCESSFULLY
+
+    ConversationListPaginated:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conversation'
+        total:
+          type: integer
+          example: 12
+        page:
+          type: integer
+          example: 1
+        lastPage:
+          type: integer
+          example: 2
+        limit:
+          type: integer
+          example: 10
+        hasPrevPage:
+          type: boolean
+          example: false
+        hasNextPage:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: CONVERSATION_RETRIEVED_SUCCESSFULLY

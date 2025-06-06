@@ -1,0 +1,44 @@
+{
+    "version": "1.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run Task Manager Api",
+            "args": [
+                "${workspaceFolder}/src/main.ts"
+            ],
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register",
+                "-r",
+                "tsconfig-paths/register"
+            ],
+            "cwd": "${workspaceRoot}",
+            "outputCapture": "std",
+            "autoAttachChildProcesses": true,
+            "envFile": "${workspaceFolder}/.env",
+
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run all tests in debug with coverage",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            "args": [
+              "--config",
+              "./src/config/jest/jest.config.js",
+              "--runInBand",
+              "--watch",
+              "--coverage"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": "npm: test:openCoverage",
+            "skipFiles": [
+              "<node_internals>/**"
+            ],
+            "console": "integratedTerminal",
+        }
+    ]
+}

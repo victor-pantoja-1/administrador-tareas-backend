@@ -1,0 +1,46 @@
+image: node:18
+
+pipelines:
+  branches:
+    staging:
+    - step:
+        name: Build and Deploy to ECS
+        services:
+          - docker
+        caches:
+          - node
+        script:
+          - echo "Setting environment variables..."
+          - export BITBUCKET_COMMIT_SHORT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+
+          - echo "Installing AWS CLI..."
+          - apt-get update && apt-get install -y unzip
+          - wget -O awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+          - unzip -FF awscliv2.zip
+          - ./aws/install
+          - aws --version
+          - mkdir -p ~/.aws/
+          - echo -e "[default]\naws_access_key_id=$AWS_ACCESS_KEY_ID\naws_secret_access_key=$AWS_SECRET_ACCESS_KEY" > ~/.aws/credentials
+          - echo -e "[default]\nregion = $AWS_REGION" > ~/.aws/config
+
+          - echo "Building Docker image..."
+          - docker build -t $ECR_REPOSITORY_NAME .
+
+          - echo "Logging into Amazon ECR..."
+          - aws ecr get-login-password --region $AWS_REGION | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+
+          - echo "Tagging the Docker image..."
+          - docker tag $ECR_REPOSITORY_NAME:latest $CI_REGISTRY/$ECR_REPOSITORY_NAME:latest
+          - docker tag $ECR_REPOSITORY_NAME:latest $CI_REGISTRY/$ECR_REPOSITORY_NAME:$BITBUCKET_COMMIT_SHORT
+
+          - echo "Pushing the Docker image to ECR..."
+          - docker push $CI_REGISTRY/$ECR_REPOSITORY_NAME:latest
+          - docker push $CI_REGISTRY/$ECR_REPOSITORY_NAME:$BITBUCKET_COMMIT_SHORT
+
+          - echo "Deploying to ECS..."
+          - aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment --region $AWS_REGION
+
+definitions:
+  services:
+    docker:
+      memory: 2048

@@ -1,0 +1,192 @@
+openapi: 3.0.0
+info:
+  title: Feedback API
+  description: API for managing feedbacks
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: feedbacks
+    description: Operations related to feedbacks
+
+paths:
+  /feedbacks:
+    post:
+      tags:
+        - feedbacks
+      summary: Create a new feedback
+      operationId: createFeedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFeedbackDto'
+      responses:
+        '201':
+          description: Feedback created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedFeedback'
+        '500':
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /feedbacks/{id}:
+    patch:
+      tags:
+        - feedbacks
+      summary: Update an existing feedback
+      operationId: updateFeedback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFeedbackDto'
+      responses:
+        '200':
+          description: Feedback updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatedFeedback'
+        '500':
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - feedbacks
+      summary: Delete a feedback
+      operationId: deleteFeedback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feedback deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedFeedback'
+        '500':
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateFeedbackDto:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Feedback content
+          example: This is a feedback content
+        taskId:
+          type: string
+          description: Task ID
+          example: 27fb258c-8cca-4891-89b1-92411bb3027d
+        userId:
+          type: string
+          description: User ID
+          example: 22417793-fe34-4f83-a472-be0e4bfd1c9c
+      required:
+        - content
+        - taskId
+        - userId
+
+    UpdateFeedbackDto:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Feedback content
+          example: This is a feedback content updated
+        taskId:
+          type: string
+          description: Task ID
+          example: 27fb258c-8cca-4891-89b1-92411bb3027d
+        userId:
+          type: string
+          description: User ID
+          example: 22417793-fe34-4f83-a472-be0e4bfd1c9c
+
+    CreatedFeedback:
+      type: object
+      properties:
+        data:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: FEEDBACK_CREATED_SUCCESSFULLY
+
+    UpdatedFeedback:
+      type: object
+      properties:
+        data:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: FEEDBACK_UPDATED_SUCCESSFULLY
+
+    DeletedFeedback:
+      type: object
+      properties:
+        data:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 204
+        message:
+          type: string
+          example: FEEDBACK_DELETE_SUCCESSFULLY
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500

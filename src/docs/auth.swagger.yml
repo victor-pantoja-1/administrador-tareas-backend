@@ -1,0 +1,632 @@
+openapi: 3.0.0
+info:
+  title: AUTH
+  version: 1.0.0
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: User login
+      parameters:
+        - in: header
+          name: x-client-type
+          required: true
+          schema:
+            type: string
+            description: origin of the request
+            enum:
+              - WWW
+              - APP
+            example: 'WWW'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: admin@taskmanager.com
+                password:
+                  type: string
+                  example: taskmanager
+                notificationsToken:
+                  type: string
+                  example: 'c64pIzB5RIucdO4hcdsjZl...'
+                lang:
+                  type: string
+                  example: es
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'LOGIN_SUCCESS'
+                  access_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+                  refresh_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+                  userId: 
+                    type: string
+                    example: '5f4e3d7b7f3b7b001f7e7b7b'
+                  isNew:
+                    type: boolean
+                    example: true
+                  roles: 
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: '5f4e3d7b7f3b7b001f7e7b7b'
+                      name:
+                        type: string
+                        example: 'admin role'
+                      description:
+                        type: string
+                        example: 'admin role description'
+                      isActive:
+                        type: boolean
+                        example: true
+                      createdAt:
+                        type: string
+                        example: '2020-09-01T00:00:00.000Z'
+                      updatedAt:
+                        type: string
+                        example: '2020-09-01T00:00:00.000Z'
+                      permissions:
+                        type: array
+                        items: 
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: '5f4e3d7b7f3b7b001f7e7b7b'
+                            resource:
+                              type: string
+                              example: 'admin permission'
+                            target:
+                              type: string
+                              example: 'admin permission target'
+                            createdAt:
+                              type: string
+                              example: '2020-09-01T00:00:00.000Z'
+                            updatedAt:
+                              type: string
+                              example: '2020-09-01T00:00:00.000Z'
+        '403':
+          description: email or password is incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 403
+                  message:
+                    type: string
+                    example: 'EMAIL_PASSWORD_INVALID'         
+        '400':
+          description: When 2FA is enabled but the user dont have a phoneNumber
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'USER_WITHOUT_PHONE_NUMBER'
+        '401':
+          description: When the user cant login into a resource
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'USER_NOT_AUTHORIZED'
+  /auth/refresh-token:
+    post:
+      tags:
+        - auth
+      summary: Refresh token
+      # parameters:
+      #   - in: header
+      #     name: Authorization
+      #     required: true
+      #     schema:
+      #       type: string
+      #       description: origin of the request
+      #       example: 'Bearer eyJhbG ...'
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'REFRESH_TOKEN_SUCCESS'
+                  access_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+                  refresh_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+        '401':
+          description: When the refresh token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'REFRESH_TOKEN_INVALID'
+  /auth/forgot-password:
+    post:
+      tags:
+        - auth
+      summary: Forgot Password
+      description: Endpoint to request reset my password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: admin@taskmanager.com
+                language:
+                  type: string
+                  example: es
+      responses:
+        '200':
+          description: Password reset email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'PASSWORD_RESET_EMAIL_SENT'
+        '404':
+          description: When the email is not associated to any user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 404
+                  message:
+                    type: string
+                    example: 'USER_NOT_FOUND'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'UNAUTHORIZED'
+                  error:
+                    type: string
+                    example: 'Invalid email'
+  /auth/reset-password:
+    post:
+      tags:
+        - auth
+      summary: Reset Password
+      description: Endpoint to reset my password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: 'eyJhbGciOiJIUzI1NiIsInR5 ...'
+                password:
+                  type: string
+                  example: 'newPassword'
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'PASSWORD_RESET_SUCCESS'
+        '401':
+          description: When the token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'TOKEN_INVALID'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'UNAUTHORIZED'
+                  error:
+                    type: string
+                    example: 'Invalid token'
+  /auth/change-password:
+    post:
+      tags:
+        - auth
+      summary: Change Password
+      description: Endpoint to change my password.
+      # parameters:
+      #   - in: header
+      #     name: Authorization
+      #     required: true
+      #     schema:
+      #       type: string
+      #       description: Bearer token
+      #       example: 'Bearer eyJhbGciOiJIUz ...'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: 'oldPassword'
+                newPassword:
+                  type: string
+                  example: 'newPassword'
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'PASSWORD_CHANGED_SUCCESS'
+        '401':
+          description: When the token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'TOKEN_INVALID'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'BAD REQUEST'
+  /auth/verify-2fa:
+    post: 
+      tags:
+        - auth
+      summary: Verify 2FA
+      description: Endpoint to verify 2FA.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: '123456'
+                twoFaToken:
+                  type: string
+                  example: 'eyJhbGciOi2323rwefdewr32 ...'
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'LOGIN_SUCCESS'
+                  access_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+                  refresh_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+                  userId: 
+                    type: string
+                    example: '5f4e3d7b7f3b7b001f7e7b7b'
+                  roles: 
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: '5f4e3d7b7f3b7b001f7e7b7b'
+                      name:
+                        type: string
+                        example: 'admin role'
+                      description:
+                        type: string
+                        example: 'admin role description'
+                      isActive:
+                        type: boolean
+                        example: true
+                      createdAt:
+                        type: string
+                        example: '2020-09-01T00:00:00.000Z'
+                      updatedAt:
+                        type: string
+                        example: '2020-09-01T00:00:00.000Z'
+                      permissions:
+                        type: array
+                        items: 
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: '5f4e3d7b7f3b7b001f7e7b7b'
+                            resource:
+                              type: string
+                              example: 'admin permission'
+                            target:
+                              type: string
+                              example: 'admin permission target'
+                            createdAt:
+                              type: string
+                              example: '2020-09-01T00:00:00.000Z'
+                            updatedAt:
+                              type: string
+                              example: '2020-09-01T00:00:00.000Z'
+        '401':
+          description: When the token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'TOKEN_INVALID'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'BAD REQUEST'
+  /resend-2fa-code:
+    post:
+      tags:
+        - auth
+      summary: Resend 2FA code
+      description: Endpoint to resend 2FA code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                twoFaToken:
+                  type: string
+                  example: 'eyJhbGciOi2323rwefdewr32 ...'
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'RESEND_2FA_CODE_SUCCESS'
+                  two_fa_token:
+                    type: string
+                    example: 'eyJhbGciOi ...'
+                  created_at:
+                    type: string
+                    example: '2020-09-01T00:00:00.000Z'
+                  expire_at:
+                    type: string
+                    example: '2020-09-01T00:00:00.000Z'
+                  status:
+                    type: string
+                    example: 'active'
+        '401':
+          description: When the token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'TOKEN_INVALID'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'BAD REQUEST'
+  /auth/set-new-password:
+    post:
+      tags:
+        - auth
+      summary: User login
+      # parameters:
+      #   - in: header
+      #     name: Authorization
+      #     required: true
+      #     schema:
+      #       type: string
+      #       description: origin of the request
+      #       example: 'Bearer eyJhbGciOiJIUz ...'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: 'newPassword'
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: 'RESET_PASSWORD_SUCCESS'
+        '401':
+          description: When the token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'TOKEN_INVALID'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'BAD REQUEST'

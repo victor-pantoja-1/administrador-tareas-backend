@@ -1,0 +1,519 @@
+openapi: 3.0.0
+info:
+  title: Rating API
+  version: 1.0.0
+  description: API for managing ratings
+
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /ratings/{targetType}:
+    post:
+      tags:
+        - rating
+      summary: Rate a task according to the target type
+      parameters:
+        - name: targetType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - client
+              - technician
+              - company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRatingDto'
+      responses:
+        '201':
+          description: Rating created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedRatingResponse'
+        '400':
+          description: Task not in done status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingError400ResponseCreate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /ratings/ratings-of-task/{id}:
+    get:
+      tags:
+        - rating
+      summary: Get all ratings of a task
+      parameters:
+        - name: id
+          in: path
+          description: Rating id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of ratings for the task
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "RATINGS_RETRIEVED_SUCCESSFULLY"
+                  data:
+                    $ref: '#/components/schemas/SingleRating'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Rating not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingNotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /ratings/top-five-technicians:
+    get:
+      tags:
+        - rating
+      summary: Get top five technicians
+      responses:
+        '200':
+          description: List of top five technicians
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: USER_RETRIEVED_SUCCESSFULLY
+                  data:
+                    $ref: '#/components/schemas/TopFiveTechniciansResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateRatingDto:
+      type: object
+      properties:
+        rating:
+          type: number
+          format: float
+          description: The rating value
+          example: 3
+        comment:
+          type: string
+          description: The comment for the rating
+          example: Good job!
+        images:
+          type: array
+          items:
+            type: string
+          description: The images for the rating
+          example:
+            - "https://path.to-the.image"
+            - "https://path.to-the.image"
+        taskId:
+          type: string
+          description: The ID of the task being rated
+          example: 0fd1906d-e753-45b9-9a13-4920093984ef
+        targetUserId:
+          type: string
+          description: The ID of the user being rated (Not required for company type rating)
+          example: a1b2c3d4-e5f6-7890-1234-567890abcdef
+        targetType:
+          type: string
+          description: The type of the target being rated
+          example: technician
+          enum:
+            - client
+            - technician
+            - company
+      required:
+        - rating
+        - comment
+        - taskId
+        - targetType
+
+    CreatedRatingResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: "RATING_CREATED_SUCCESSFULLY"
+        data:
+          type: object
+          properties:
+            rating:
+              type: integer
+              example: 3
+            comment:
+              type: string
+              example: "Good job!"
+            task:
+              $ref: '#/components/schemas/Task'
+            user:
+              $ref: '#/components/schemas/User'
+            targetUser:
+              $ref: '#/components/schemas/User'
+            targetType:
+              type: string
+              example: "technician"
+            images:
+              type: array
+              items:
+                type: string
+                format: uri
+                example: "https://path.to-the.image"
+            id:
+              type: string
+              example: "bcaa55b5-857e-423d-b87f-7ddea9ef05eb"
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-09-05T01:12:10.421Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-09-05T01:12:10.421Z"
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "a828df90-235b-4a6b-88d0-7053c7261d70"
+        title:
+          type: string
+          example: "Task nueva 1"
+        description:
+          type: string
+          example: "Soy la description de la request task"
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: float
+              example: 19.3555051
+            longitude:
+              type: number
+              format: float
+              example: -99.1115732
+        status:
+          type: string
+          example: "DONE"
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        startDate:
+          type: string
+          format: date-time
+          example: "2024-08-29T20:31:14.000Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2024-08-30T06:00:00.000Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-08-30T02:31:13.913Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-09-05T01:10:30.000Z"
+        timeEstimation:
+          type: string
+          example: "2"
+        address:
+          type: string
+          example: "CDMX"
+        technicians:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        client:
+          $ref: '#/components/schemas/User'
+        feedbacks:
+          type: array
+          items:
+            type: object
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        ratings:
+          type: array
+          items:
+            type: object
+        conversation:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "f68df4d8-532a-45ed-ad19-a07deb0b439a"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "e5943e91-a152-449e-808e-0900f7714ef4"
+        name:
+          type: string
+          example: "Cliente"
+        lastName:
+          type: string
+          example: "1"
+        isPrivate:
+          type: boolean
+          example: false
+        email:
+          type: string
+          example: "gabriel.barrera@codescript.us"
+        prefix:
+          type: string
+          example: "+52"
+        phoneNumber:
+          type: string
+          example: "7711426243"
+        photo:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+          example: true
+        location:
+          type: string
+          nullable: true
+        isNew:
+          type: boolean
+          example: true
+        lang:
+          type: string
+          example: "en"
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "ab2b6934-a526-444e-b7d8-785478b40237"
+        name:
+          type: string
+          example: "tag"
+
+    SingleRating:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "bcaa55b5-857e-423d-b87f-7ddea9ef05eb"
+        rating:
+          type: integer
+          example: 3
+        comment:
+          type: string
+          example: "Good job!"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "e5943e91-a152-449e-808e-0900f7714ef4"
+            name:
+              type: string
+              example: "Cliente"
+            lastName:
+              type: string
+              example: "1"
+
+    TopFiveTechniciansResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: "1bcb34d8-9793-4c1c-9397-deb069272ee5"
+          name:
+            type: string
+            example: "Tecnico"
+          lastName:
+            type: string
+            example: "3"
+          email:
+            type: string
+            format: email
+            example: "gabriel.barrera+tecnico3@codescript.us"
+          photo:
+            type: string
+            nullable: true
+            example: null
+          averageRating:
+            type: string
+            example: "5.0000"
+    
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+    RatingError400ResponseCreate:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/TaskNotInDoneStatus'
+        - $ref: '#/components/schemas/AccessDeniedErrorResponse'
+        - $ref: '#/components/schemas/UserNotFoundErrorResponse'
+        - $ref: '#/components/schemas/InvalidTargetType'
+        - $ref: '#/components/schemas/UserAlreadyRated'
+    
+    TaskNotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: TASK_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 404
+
+    RatingNotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: RATING_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 404
+
+    TaskNotInDoneStatus:
+      type: object
+      properties:
+        message:
+          type: string
+          example: TASK_NOT_IN_DONE_STATUS
+        statusCode:
+          type: integer
+          example: 400
+
+    AccessDeniedErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 400
+
+    UserNotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: USER_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 400
+
+    InvalidTargetType:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INVALID_TARGET_TYPE
+        statusCode:
+          type: integer
+          example: 400
+
+    UserAlreadyRated:
+      type: object
+      properties:
+        message:
+          type: string
+          example: USER_ALREADY_RATED
+        statusCode:
+          type: integer
+          example: 400
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500

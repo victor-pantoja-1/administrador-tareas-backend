@@ -1,0 +1,1232 @@
+openapi: 3.0.0
+info:
+  title: Task API
+  description: API for managing tasks
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:9000/api/v1
+    description: Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /tasks:
+    post:
+      tags:
+        - tasks
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDto'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTaskResponse'
+
+        '400':
+          description: Task time estimation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTimeEstimationErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskUserNotFoundErrorResponse'
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - tasks
+      summary: Get all tasks
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date-time
+            description: Start date
+            example: 2024-08-01T00:00:00.000Z
+          required: true
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date-time
+            description: End date
+            example: 2024-08-03T00:00:00.000Z
+          required: true
+        - in: query
+          name: search
+          schema:
+            type: string
+            description: Search by text
+            example: Search by text
+        - in: query
+          name: tags
+          schema:
+            type: array
+            items:
+              type: string
+              example: d37e79ab-9ef8-4c1d-9151-922b595ef70d
+            description: Search by tag/s ids
+        - in: query
+          name: technicians
+          schema:
+            type: array
+            items:
+              type: string
+              example: 22417793-fe34-4f83-a472-be0e4bfd1c9c
+            description: Search by technician/s ids
+        - in: query
+          name: clients
+          schema:
+            type: array
+            items:
+              type: string
+              example: cb888b02-e168-4555-abbd-621cf8dcbf6a
+            description: Search by client/s ids
+        - in: query
+          name: filter
+          schema:
+            type: string
+            enum:
+              - day
+              - update
+              - endDate
+            example: day
+            description: 'day | update | endDate'
+        - in: query
+          name: pendings
+          schema:
+            type: boolean
+            example: true
+            description: Search pendings only
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTasksResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskUserNotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/paginate:
+    get:
+      tags:
+        - tasks
+      summary: Get paginated tasks
+      parameters:
+        - in: query
+          name: page
+          description: Page number
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: Number of items per page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated list of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListTaskPaginatedResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/calendar:
+    get:
+      tags:
+        - tasks
+      summary: Get tasks by calendar
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date-time
+            description: Start date
+            example: 2024-08-01T00:00:00.000Z
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date-time
+            description: End date
+            example: 2024-08-03T00:00:00.000Z
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date-time
+            description: End date
+        - in: query
+          name: year
+          schema:
+            type: number
+            description: Search by year
+            example: 2024
+        - in: query
+          name: month
+          schema:
+            type: number
+            description: Search by month
+            example: 11
+        - in: query
+          name: technicians
+          schema:
+            type: array
+            items:
+              type: string
+              example: 22417793-fe34-4f83-a472-be0e4bfd1c9c
+            description: Search by technician/s ids
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - TODO
+              - IN_PROGRESS
+              - DONE
+              - ARCHIVED
+            description: 'TODO | IN_PROGRESS | DONE | ARCHIVED'
+      responses:
+        '200':
+          description: List of tasks by calendar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTasksResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/viewport:
+    get:
+      tags:
+        - tasks
+      summary: Get tasks by viewport
+      parameters:
+        - in: query
+          name: neLat
+          schema:
+            type: number
+          required: true
+        - in: query
+          name: neLng
+          schema:
+            type: number
+            example: -98.5793158
+          required: true
+        - in: query
+          name: swLat
+          schema:
+            type: number
+            example: 18.2985595
+          required: true
+        - in: query
+          name: swLng
+          schema:
+            type: number
+            example: -99.6340033
+          required: true
+        - in: query
+          name: neLat
+          schema:
+            type: number
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date-time
+            description: Start date
+            example: 2024-08-01T00:00:00.000Z
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date-time
+            description: End date
+            example: 2024-08-03T00:00:00.000Z
+        - in: query
+          name: technicians
+          schema:
+            type: array
+            items:
+              type: string
+              example: 22417793-fe34-4f83-a472-be0e4bfd1c9c
+            description: Search by technician/s ids
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - TODO
+              - IN_PROGRESS
+              - DONE
+              - ARCHIVED
+            description: 'TODO | IN_PROGRESS | DONE | ARCHIVED'
+      responses:
+        '200':
+          description: List of tasks by viewport
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTasksResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/dashboard:
+    get:
+      tags:
+        - tasks
+      summary: Get total tasks by status for the last seven days
+      responses:
+        '200':
+          description: Total tasks by status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/{id}:
+    get:
+      tags:
+        - tasks
+      summary: Get a task by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: TASKS_RETRIEVED_SUCCESSFULLY
+                  data:
+                    $ref: '#/components/schemas/SingleTaskResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+    patch:
+      tags:
+        - tasks
+      summary: Update a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDto'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: TASK_UPDATED_SUCCESSFULLY
+                  data:
+                    type: boolean
+                    example: true
+        '400':
+          description: Task time estimation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTimeEstimationErrorResponse'
+        '403':
+          description: Client should be the same
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientShouldBeTheSameError'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        
+    delete:
+      tags:
+        - tasks
+      summary: Delete a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 204
+                  message:
+                    type: string
+                    example: TASK_DELETED_SUCCESSFULLY
+                  data:
+                    type: boolean
+                    example: true
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tasks/update-status/{id}:
+    patch:
+      tags:
+        - tasks
+      summary: Update task status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskStatusDto'
+      responses:
+        '200':
+          description: Task status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: TASK_STATUS_UPDATED_SUCCESSFULLY
+                  data:
+                    type: boolean
+                    example: true
+        '403':
+          description: Task status update not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatusUpdateNotAuthorized'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TaskDto:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Learn NestJS
+        description:
+          type: string
+          example: Learn NestJS for 30 days
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+        status:
+          type: string
+          enum:
+            - TODO
+            - IN_PROGRESS
+            - DONE
+            - ARCHIVED
+          example: IN_PROGRESS
+        tags:
+          type: array
+          items:
+            type: string
+          example:
+            - ece3395b-2e57-4eee-b973-d6c80c1144ef
+            - ece3395b-2e57-4eee-b973-d6c80c1144ef
+        client:
+          type: string
+          example: cb888b02-e168-4555-abbd-621cf8dcbf6a
+        technicians:
+          type: array
+          items:
+            type: string
+          example:
+            - 22417793-fe34-4f83-a472-be0e4bfd1c9c
+            - 22417793-fe34-4f83-a472-be0e4bfd1c9c
+        images:
+          type: array
+          items:
+            type: string
+          example:
+            - https://example.com/image1.jpg
+            - https://example.com/image2.jpg
+        startDate:
+          type: object
+          format: date-time
+          example: 2024-08-01T00:00:00.000Z
+        endDate:
+          type: object
+          format: date-time
+          example: 2024-08-03T00:00:00.000Z
+        timeEstimation:
+          type: number
+          example: 3
+        address:
+          type: string
+          example: 123 Main St
+      required:
+        - title
+        - description
+        - client
+        - startDate
+        - endDate
+        - timeEstimation
+        - address
+
+    CreateTaskResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: TASK_CREATED_SUCCESSFULLY
+        data:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "Learn NestJS"
+            description:
+              type: string
+              example: "Learn NestJS for 30 days"
+            location:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                  format: float
+                  example: 0
+                longitude:
+                  type: number
+                  format: float
+                  example: 0
+            status:
+              type: string
+              example: "TODO"
+            images:
+              type: array
+              items:
+                type: string
+                format: uri
+                example: "https://example.com/image1.jpg"
+            startDate:
+              type: string
+              format: date-time
+              example: "2024-09-05T00:00:00"
+            endDate:
+              type: string
+              format: date-time
+              example: "2024-09-07T00:00:00"
+            timeEstimation:
+              type: integer
+              example: 3
+            address:
+              type: string
+              example: "123 Main St"
+            client:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "e5943e91-a152-449e-808e-0900f7714ef4"
+                name:
+                  type: string
+                  example: "Cliente"
+                lastName:
+                  type: string
+                  example: "1"
+                email:
+                  type: string
+                  format: email
+                  example: "gabriel.barrera@codescript.us"
+                prefix:
+                  type: string
+                  example: "+52"
+                phoneNumber:
+                  type: string
+                  example: "7711426243"
+            technicians:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "93f20d4b-1152-4487-b313-f385d33d6d1b"
+                  name:
+                    type: string
+                    example: "Tecnico"
+                  lastName:
+                    type: string
+                    example: "1"
+                  isPrivate:
+                    type: boolean
+                    example: false
+                  email:
+                    type: string
+                    format: email
+                    example: "gabriel.barrera+tecnico1@codescript.us"
+                  password:
+                    type: string
+                    example: "$2a$10$Qqo4x7XVRGXIPb8Pd3M4IupdfYYah5q9LmpoNIk4uHV0t9CQk.m1S"
+                  docNumber:
+                    type: string
+                    nullable: true
+                    example: null
+                  prefix:
+                    type: string
+                    example: "+52"
+                  phoneNumber:
+                    type: string
+                    example: "7711426243"
+                  photo:
+                    type: string
+                    nullable: true
+                    example: null
+                  active:
+                    type: boolean
+                    example: true
+                  enable2FA:
+                    type: boolean
+                    example: false
+                  emailVerifiedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    example: "2024-08-29T22:55:48.000Z"
+                  location:
+                    type: string
+                    nullable: true
+                    example: null
+                  isNew:
+                    type: boolean
+                    example: true
+                  gender:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: "MALE"
+                  resetPasswordToken:
+                    type: string
+                    nullable: true
+                    example: null
+                  notificationsTokens:
+                    type: string
+                    nullable: true
+                    example: null
+                  lang:
+                    type: string
+                    nullable: true
+                    example: null
+                  role:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "782bcb7a-6c42-46fd-a559-9584b57b9f39"
+                      name:
+                        type: string
+                        example: "technician"
+                      description:
+                        type: string
+                        example: "Technician role"
+                      isActive:
+                        type: boolean
+                        example: true
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2024-08-29T03:51:47.000Z"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-08-29T04:04:07.000Z"
+            tags:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "d37e79ab-9ef8-4c1d-9151-922b595ef70d"
+                  name:
+                    type: string
+                    example: "32f3d608-99b2-43e3-9a8e-40f6e5def02d"
+            id:
+              type: string
+              format: uuid
+              example: "9660d448-a848-4ce1-9073-90043fa3769c"
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-09-05T21:22:19.156Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-09-05T21:22:19.156Z"
+
+    SingleTaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "1247e9c2-83b8-4c18-81cf-0b58249337d0"
+        title:
+          type: string
+          example: "Reparar modem de internet satelital"
+        description:
+          type: string
+          example: "Soy la description de la request task"
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: float
+              example: 19.3555051
+            longitude:
+              type: number
+              format: float
+              example: -99.1115732
+        status:
+          type: string
+          example: "TODO"
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        startDate:
+          type: string
+          format: date-time
+          example: "2024-08-30T04:13:01.000Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2024-08-31T06:00:00.000Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-08-30T10:13:01.330Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-08-30T10:15:10.000Z"
+        timeEstimation:
+          type: string
+          example: "3"
+        address:
+          type: string
+          example: "CDMX"
+        client:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "e5943e91-a152-449e-808e-0900f7714ef4"
+            name:
+              type: string
+              example: "Cliente"
+            lastName:
+              type: string
+              example: "1"
+            email:
+              type: string
+              format: email
+              example: "gabriel.barrera@codescript.us"
+            photo:
+              type: string
+              nullable: true
+              example: null
+        technicians:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "1bcb34d8-9793-4c1c-9397-deb069272ee5"
+              name:
+                type: string
+                example: "Tecnico"
+              lastName:
+                type: string
+                example: "3"
+              email:
+                type: string
+                format: email
+                example: "gabriel.barrera+tecnico3@codescript.us"
+              photo:
+                type: string
+                nullable: true
+                example: null
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "ab2b6934-a526-444e-b7d8-785478b40237"
+              name:
+                type: string
+                example: "tag"
+        feedbacks:
+          type: array
+          items: {}
+        ratings:
+          type: array
+          items: {}
+        conversation:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "b7cc4547-abf2-4e02-b429-bbdf80845239"
+
+
+    ListTasksResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: TASKS_RETRIEVED_SUCCESSFULLY
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SingleTaskResponse'
+            
+    ListTaskPaginatedResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: TASKS_RETRIEVED_SUCCESSFULLY
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "5ae2b918-951c-46dc-82b2-79545389edcb"
+              title:
+                type: string
+                example: "Tarea 8"
+              description:
+                type: string
+                example: "<p>holanda</p>"
+              status:
+                type: string
+                example: "IN_PROGRESS"
+              startDate:
+                type: string
+                format: date-time
+                example: "2024-08-28T06:00:00.000Z"
+              endDate:
+                type: string
+                format: date-time
+                example: "2024-08-30T06:00:00.000Z"
+              address:
+                type: string
+                example: "Holanda"
+              technicians:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: "93f20d4b-1152-4487-b313-f385d33d6d1b"
+                    name:
+                      type: string
+                      example: "Tecnico"
+                    lastName:
+                      type: string
+                      example: "1"
+                    email:
+                      type: string
+                      format: email
+                      example: "gabriel.barrera+tecnico1@codescript.us"
+                    photo:
+                      type: string
+                      nullable: true
+                      example: null
+              client:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "e5943e91-a152-449e-808e-0900f7714ef4"
+                  name:
+                    type: string
+                    example: "Cliente"
+                  lastName:
+                    type: string
+                    example: "1"
+                  email:
+                    type: string
+                    format: email
+                    example: "gabriel.barrera@codescript.us"
+                  photo:
+                    type: string
+                    nullable: true
+                    example: null
+              tags:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: "32f3d608-99b2-43e3-9a8e-40f6e5def02d"
+                    name:
+                      type: string
+                      example: "holanda"
+              ratings:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: "f97facf9-884c-4a17-ac4f-973376fd99ed"
+                    rating:
+                      type: integer
+                      example: 5
+                    comment:
+                      type: string
+                      example: "Good job!"
+                    images:
+                      type: array
+                      items:
+                        type: string
+                        format: uri
+                    user:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "e5943e91-a152-449e-808e-0900f7714ef4"
+                        name:
+                          type: string
+                          example: "Cliente"
+                        lastName:
+                          type: string
+                          example: "1"
+                        email:
+                          type: string
+                          format: email
+                          example: "gabriel.barrera@codescript.us"
+                        photo:
+                          type: string
+                          nullable: true
+                          example: null
+                        role:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: "client"
+        total:
+          type: integer
+          example: 13
+        page:
+          type: integer
+          example: 1
+        lastPage:
+          type: integer
+          example: 2
+        limit:
+          type: integer
+          example: 10
+        hasPrevPage:
+          type: boolean
+          example: false
+        hasNextPage:
+          type: boolean
+          example: true
+
+    DashboardResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: TASKS_RETRIEVED_SUCCESSFULLY
+        data:
+          type: object
+          properties:
+            totalsByDays:
+              type: array
+              items:
+                type: object
+                properties:
+                  TODO:
+                    type: integer
+                    example: 1
+                  IN_PROGRESS:
+                    type: integer
+                    example: 1
+                  DONE:
+                    type: integer
+                    example: 0
+                  date:
+                    type: string
+                    format: date-time
+                    example: "2024-08-30T06:00:00.000Z"
+            clients:
+              type: integer
+              example: 2
+            totals:
+              type: object
+              properties:
+                TODO:
+                  type: integer
+                  example: 7
+                IN_PROGRESS:
+                  type: integer
+                  example: 3
+                DONE:
+                  type: integer
+                  example: 2
+
+    UpdateTaskStatusDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - TODO
+            - IN_PROGRESS
+            - DONE
+            - ARCHIVED
+      required:
+        - status
+
+    TaskUserNotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: USER_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 400
+    
+    TaskNotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: TASK_NOT_FOUND
+        statusCode:
+          type: integer
+          example: 400
+
+    TaskTimeEstimationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: TIME_ESTIMATION_EXCEEDS_MAX_HOURS
+        statusCode:
+          type: integer
+          example: 400
+  
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ACCESS_DENIED
+        statusCode:
+          type: integer
+          example: 401
+
+    ClientShouldBeTheSameError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: CLIENT_SHOULD_BE_THE_SAME
+        statusCode:
+          type: integer
+          example: 403
+
+    TaskStatusUpdateNotAuthorized:
+      type: object
+      properties:
+        message:
+          type: string
+          example: TASK_STATUS_UPDATE_NOT_AUTHORIZED
+        statusCode:
+          type: integer
+          example: 403
+    
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        statusCode:
+          type: integer
+          example: 500
